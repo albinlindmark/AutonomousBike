@@ -32,6 +32,10 @@ class BikeLQREnv(gym.Env):
     def step(self, action):
         self.reward += -(self.state.transpose() @ self.Q @ self.state + self.R*action**2)
         self.state = self.A @ self.state + self.B @ action
+        if state[0] > 30*np.pi/180:
+            self.done = True
+        
+        return self.state, self.reward, self.done, _
         
 
     def reset(self):
@@ -41,6 +45,7 @@ class BikeLQREnv(gym.Env):
         phi_0 = np.pi/180 * np.random.uniform(-15, 15)
         self.state = np.array([[phi_0], [0]], dtype=np.float32)
         self.reward = 0
+        self.done = False
         
     def render(self, mode='human'):
-        print('hej')
+        print('Reward:', self.reward)
