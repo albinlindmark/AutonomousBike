@@ -30,9 +30,9 @@ class BikeLQREnv(gym.Env):
 
 
     def step(self, action):
-        state = self.state
-        state = self.A @ state + self.B @ action
-        self.reward += -(state.transpose() @ self.Q @ state + self.R**2*action)
+        self.reward += -(self.state.transpose() @ self.Q @ self.state + self.R*action**2)
+        self.state = self.A @ self.state + self.B @ action
+        
         
         
         
