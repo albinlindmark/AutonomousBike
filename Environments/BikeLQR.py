@@ -47,6 +47,7 @@ class BikeLQREnv(gym.Env):
         self.state = np.array([[phi_0], [0]], dtype=np.float32)
         self.reward = 0
         self.done = False
+        return self.state
         
     def render(self, mode='human'):
         print('Reward:', self.reward)
