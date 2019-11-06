@@ -22,9 +22,9 @@ class BikeLQREnv(gym.Env):
     def __init__(self):
         self.state = None
         self.reward = None
-        self.Ts = 0.04
+        # The ss matrices were created with Ts = 0.04 s and v = 5 m/s
         self.A = np.array([[1.015144907891091, 0.070671622176451], [0.431844962338814, 1.015144907891091]], dtype=np.float32)
-        self.B = np.array([[0.001757594373457], [0.000476400936242]], dtype=np.float32)
+        self.B = np.array([[0.210654076615514], [1.042632885238932]], dtype=np.float32)
         self.Q = np.array([[10, 0], [0, 0]], dtype=np.float32)
         self.R = 1
 
