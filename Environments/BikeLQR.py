@@ -8,7 +8,6 @@ class BikeLQREnv(gym.Env):
     Observation: 
         
     Actions:
-        Type: Discrete(4)
 
     Reward:
 
