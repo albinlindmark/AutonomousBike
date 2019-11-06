@@ -32,7 +32,8 @@ class BikeLQREnv(gym.Env):
     def step(self, action):
         self.reward += -(self.state.transpose() @ self.Q @ self.state + self.R*action**2)
         self.state = self.A @ self.state + self.B @ action
-        if state[0] > 30*np.pi/180:
+        # If roll angle larger than 30 degrees, then terminate:
+        if self.state[0] > 30*np.pi/180:
             self.done = True
         
         return self.state, self.reward, self.done, _
