@@ -4,7 +4,7 @@ from gym.utils import seeding
 import numpy as np
 from os import path
 
-class PendulumEnv(gym.Env):
+class PendulumModEnv(gym.Env):
     metadata = {
         'render.modes' : ['human', 'rgb_array'],
         'video.frames_per_second' : 30
@@ -89,3 +89,5 @@ class PendulumEnv(gym.Env):
 
 def angle_normalize(x):
     return (((x+np.pi) % (2*np.pi)) - np.pi)
+
+print("Pendulum Mod Running")
