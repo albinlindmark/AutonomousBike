@@ -22,6 +22,8 @@ class BikeLQREnv(gym.Env):
     def __init__(self):
         self.state = None
         self.reward = None
+        self.observation_space = spaces.Box(-np.inf, np.inf, shape=(2,), dtype=np.float32)
+        self.action_space = spaces.Box(-180, +180, (1,), dtype=np.float32)
         
         # The state space matrices were created with Ts = 0.04 s and v = 5 m/s
         self.A = np.array([[1.015144907891091, 0.070671622176451], [0.431844962338814, 1.015144907891091]], dtype=np.float32)

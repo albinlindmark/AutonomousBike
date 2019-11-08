@@ -11,7 +11,7 @@ import Test_PPO
 import Save_metrics
 
 #PPO parameters
-env_id = 'LunarLanderContinuous-v2'
+env_id = 'BikeLRQ-v0'
 num_envs = 64
 hidden_size = 256
 learning_rate = 0.00005
