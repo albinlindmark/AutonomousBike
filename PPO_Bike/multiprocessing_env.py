@@ -8,6 +8,7 @@ def worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
     env = env_fn_wrapper.x()
     while True:
+        print(while_loop)
         cmd, data = remote.recv()
         if cmd == 'step':
             ob, reward, done, info = env.step(data)
@@ -111,9 +112,11 @@ class SubprocVecEnv(VecEnv):
             p.start()
         for remote in self.work_remotes:
             remote.close()
-
+        
         self.remotes[0].send(('get_spaces', None))
+        print('hejhej')
         observation_space, action_space = self.remotes[0].recv()
+        print('nejnej')
         VecEnv.__init__(self, len(env_fns), observation_space, action_space)
 
     def step_async(self, actions):
