@@ -41,9 +41,11 @@ if deep == 0:
 elif deep == 1:
     model = Actor_critic_model_deep.ActorCriticDeep(state_dim,action_dim,hidden_size)
 elif deep == 2:
+    print('Deep2')
     model = Actor_critic_model_extra_deep.ActorCriticXDeep(state_dim,action_dim,hidden_size)
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 state = env_list.reset()
+print('state')
 #Algorithm: PPO, Actor critic style
 while not finished:
     episode_nr += 1
