@@ -99,5 +99,5 @@ class BikeLQREnv(gym.Env):
         return self.state
         
     def render(self, mode='human'):
-
+        
         print('Reward:', self.reward)
