@@ -93,7 +93,7 @@ class BikeLQREnv(gym.Env):
 
         else:
             phi_0 = np.pi/180*(np.random.uniform(-0.5, 0.5))
-            self.v = np.random.uniform(0.5, 5)
+            self.v = np.random.uniform(4, 5)
             
         self.state = np.array([phi_0, 0, self.v], dtype=np.float32)
         self.reward = 0
