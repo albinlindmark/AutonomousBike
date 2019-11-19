@@ -23,6 +23,9 @@ class BikeLQREnv(gym.Env):
     def __init__(self):
         self.state = None
         self.reward = None
+        self.viewer = None
+        self.action = None
+        
         high = np.array([np.pi/2, np.finfo(np.float32).max, np.finfo(np.float32).max])
         self.observation_space = spaces.Box(low=-high, high=high, dtype=np.float32)
         self.action_space = spaces.Box(-np.pi/2, np.pi/2, shape=(1,), dtype=np.float32)
@@ -53,6 +56,7 @@ class BikeLQREnv(gym.Env):
 
         # Make sure that the action (delta) is in interval [-pi/2, pi/2]:
         action = np.clip(action, -np.pi/2, np.pi/2)[0]
+        self.action = action
         cost = (self.state[0:2].transpose() @ self.Q @ self.state[0:2] + action**2*self.R)
         self.reward = -np.log(1e5*cost)
         
@@ -99,5 +103,71 @@ class BikeLQREnv(gym.Env):
         return self.state
         
     def render(self, mode='human'):
+        screen_width  = 600
+        screen_height = 400
+
+        axleoffset = 30.0/4.0
+        world_width = 2.4*2
+        scale = screen_width/world_width
+        polewidth = 10.0
+        polelen = scale * (2 * 0.5)
+
+        if self.viewer is None:
+            from gym.envs.classic_control import rendering
+            self.viewer = rendering.Viewer(screen_width, screen_height)
+
+            # Text
+            #self.score_label = pyglet.text.Label("Nu går det fort!!", font_size=12,
+            #    x=0, y=0, anchor_x='center', anchor_y='center',
+            #    color=(255,255,255,255))
+            #self.score_label.draw()
+
+            # Cykeln
+            l,r,t,b = -polewidth/2,polewidth/2,polelen-polewidth/2,-polewidth/2
+            pole = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
+            pole.set_color(.8,.6,.4)
+            self.poletrans = rendering.Transform(translation=(500, 100))
+            pole.add_attr(self.poletrans)
+            self.viewer.add_geom(pole)
+            self._pole_geom = pole
+
+            # Styret
+            styre1 = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
+            styre2 = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
+            styre1.set_color(.8,.6,.4)
+            styre2.set_color(.8,.6,.4)
+            self.styre1trans = rendering.Transform(translation=(200, 100), rotation=3.14/2)
+            self.styre2trans = rendering.Transform(translation=(200, 100), rotation=-3.14/2)
+            styre1.add_attr(self.styre1trans)
+            styre2.add_attr(self.styre2trans)
+            self.viewer.add_geom(styre1)
+            self.viewer.add_geom(styre2)
+            self._styre1_geom = styre1
+            self._styre2_geom = styre2
         
-        print('Reward:', self.reward)
+        if self.state is None: return None
+
+        pole = self._pole_geom
+        styre1 = self._styre1_geom
+        styre2 = self._styre2_geom
+        l,r,t,b = -polewidth/2,polewidth/2,polelen-polewidth/2,-polewidth/2
+        pole.v = [(l,b), (l,t), (r,t), (r,b)]
+        styre1.v = [(l,b), (l,t), (r,t), (r,b)]
+        styre2.v = [(l,b), (l,t), (r,t), (r,b)]
+        
+        x = self.state
+        self.poletrans.set_rotation(-x[0])
+
+        #self.score_label.text = "Nu går det fort!!"
+        #self.score_label.text = "%04i" % self.reward
+        #self.score_label.draw()
+        if self.action is not None:
+            self.styre1trans.set_rotation(self.action+np.pi/2)
+            self.styre2trans.set_rotation(self.action-np.pi/2)
+
+        return self.viewer.render(return_rgb_array = mode=='rgb_array')
+
+    def close(self):
+        if self.viewer:
+            self.viewer.close()
+            self.viewer = None
