@@ -2,7 +2,7 @@ import gym
 import numpy as np
 from gym import spaces
 
-class BikeLQREnv(gym.Env):
+class BikeLQREnv_deltaX(gym.Env):
     """
     Description:
 
@@ -25,8 +25,13 @@ class BikeLQREnv(gym.Env):
         self.reward = None
         self.viewer = None
         self.action = None
+
+        self.x = 0
+        self.y = 0
+        self.xref = 0
+        self.deltax = self.x-self.xref 
         
-        high = np.array([np.pi/2, np.finfo(np.float32).max, np.finfo(np.float32).max])
+        high = np.array([np.pi/2, np.finfo(np.float32).max, np.finfo(np.float32).max,np.finfo(np.float32).max])
         self.observation_space = spaces.Box(low=-high, high=high, dtype=np.float32)
         self.action_space = spaces.Box(-np.pi/2, np.pi/2, shape=(1,), dtype=np.float32)
         
@@ -36,6 +41,7 @@ class BikeLQREnv(gym.Env):
         
         self.Q = np.array([[10, 0], [0, 0]])
         self.R = 1
+        self.S = 2
 
         # The state space matrices with dynamic velocity
         self.A = np.array([[1.015144907891091, 0.070671622176451], [0.431844962338814, 1.015144907891091]], dtype=np.float32)
@@ -57,11 +63,19 @@ class BikeLQREnv(gym.Env):
         # Make sure that the action (delta) is in interval [-pi/2, pi/2]:
         action = np.clip(action, -np.pi/2, np.pi/2)[0]
         self.action = action
-        cost = (self.state[0:2].transpose() @ self.Q @ self.state[0:2] + action**2*self.R)
+        cost = (self.state[0:2].transpose() @ self.Q @ self.state[0:2] + action**2*self.R + self.deltax**2*self.S)
         self.reward = -np.log(1e5*cost)
-        
+
+        # Update states of bike model
         states_wo_v = self.A @ self.state[0:2] + B * action # action is scalar
-        self.state = np.array([states_wo_v[0], states_wo_v[1], self.v], dtype = np.float32)
+
+        # Update states of bike position
+        self.x = self.x + self.v*np.sin(self.action)
+        self.y = self.y + self.v*np.cos(self.action)
+        self.deltax = self.x-self.xref
+
+        self.state = np.array([states_wo_v[0], states_wo_v[1], self.v, self.deltax], dtype = np.float32)
+        
 
         # If roll angle larger than 30 degrees, then terminate:
         if abs(self.state[0]) > 30*np.pi/180:
@@ -95,9 +109,15 @@ class BikeLQREnv(gym.Env):
             phi_0 = np.pi/180*(np.random.uniform(-0.5, 0.5))
             self.v = np.random.uniform(5, 5)
             
-        self.state = np.array([phi_0, 0, self.v], dtype=np.float32)
+
+        self.x = 0
+        self.y = 0
+        self.deltax = 0
+        self.state = np.array([phi_0, 0, self.v,self.deltax], dtype=np.float32)
         self.reward = 0
         self.done = False
+        
+        
         #phi_0 = np.pi/180*15
         
         return self.state
@@ -112,6 +132,10 @@ class BikeLQREnv(gym.Env):
         polewidth = 10.0
         polelen = scale * (2 * 0.5)
 
+        carty = 100
+        cartwidth = 50.0
+        cartheight = 30.0
+
         if self.viewer is None:
             from gym.envs.classic_control import rendering
             self.viewer = rendering.Viewer(screen_width, screen_height)
@@ -122,7 +146,8 @@ class BikeLQREnv(gym.Env):
             #    color=(255,255,255,255))
             #self.score_label.draw()
 
-            # Cykeln
+            # Gamla Cykeln
+            '''
             l,r,t,b = -polewidth/2,polewidth/2,polelen-polewidth/2,-polewidth/2
             pole = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
             pole.set_color(.8,.6,.4)
@@ -130,14 +155,39 @@ class BikeLQREnv(gym.Env):
             pole.add_attr(self.poletrans)
             self.viewer.add_geom(pole)
             self._pole_geom = pole
+            '''
 
+            # Nya cykeln
+            l,r,t,b = -cartwidth/2, cartwidth/2, cartheight/2, -cartheight/2
+            axleoffset =cartheight/4.0
+            cart = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
+            self.carttrans = rendering.Transform()
+            cart.add_attr(self.carttrans)
+            self.viewer.add_geom(cart)
+            l,r,t,b = -polewidth/2,polewidth/2,polelen-polewidth/2,-polewidth/2
+            pole = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
+            pole.set_color(.8,.6,.4)
+            self.poletrans = rendering.Transform(translation=(0, axleoffset))
+            pole.add_attr(self.poletrans)
+            pole.add_attr(self.carttrans)
+            self.viewer.add_geom(pole)
+            self.axle = rendering.make_circle(polewidth/2)
+            self.axle.add_attr(self.poletrans)
+            self.axle.add_attr(self.carttrans)
+            self.axle.set_color(.5,.5,.8)
+            self.viewer.add_geom(self.axle)
+            self.track = rendering.Line((0,carty), (screen_width,carty))
+            self.track.set_color(0,0,0)
+            self.viewer.add_geom(self.track)
+            self._pole_geom = pole
+            
             # Styret
             styre1 = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
             styre2 = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
             styre1.set_color(.8,.6,.4)
             styre2.set_color(.8,.6,.4)
-            self.styre1trans = rendering.Transform(translation=(200, 100), rotation=3.14/2)
-            self.styre2trans = rendering.Transform(translation=(200, 100), rotation=-3.14/2)
+            self.styre1trans = rendering.Transform(translation=(200, 250), rotation=3.14/2)
+            self.styre2trans = rendering.Transform(translation=(200, 250), rotation=-3.14/2)
             styre1.add_attr(self.styre1trans)
             styre2.add_attr(self.styre2trans)
             self.viewer.add_geom(styre1)
@@ -156,6 +206,8 @@ class BikeLQREnv(gym.Env):
         styre2.v = [(l,b), (l,t), (r,t), (r,b)]
         
         x = self.state
+        cartx = x[3]*scale+screen_width/2.0 # MIDDLE OF CART
+        self.carttrans.set_translation(cartx, carty)
         self.poletrans.set_rotation(-x[0])
 
         #self.score_label.text = "Nu går det fort!!"
