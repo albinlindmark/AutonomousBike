@@ -32,8 +32,8 @@ class BikeLQR_4statesEnv(gym.Env):
         self.dt = 0.04
 
         # Scenario parameters
-        self.top_rate = np.deg2rad(100)
-        self.deadzone_rate = np.deg2rad(20)*0
+        self.top_rate = np.deg2rad(200)
+        self.deadzone_rate = np.deg2rad(20)
         
 
         high = np.array([np.pi/2, np.finfo(np.float32).max, 15, np.pi/2])
@@ -64,10 +64,10 @@ class BikeLQR_4statesEnv(gym.Env):
         if abs(action - old_action) <= self.deadzone_rate*self.dt:
              action = old_action + np.sign(action - old_action)*self.deadzone_rate*self.dt
 
-        if not self.first_step:
-            if abs(action - old_action) > self.top_rate*self.dt:
-                action = old_action + np.sign(action - old_action)*self.top_rate*self.dt
-        self.first_step = False
+        
+        if abs(action - old_action) > self.top_rate*self.dt:
+            action = old_action + np.sign(action - old_action)*self.top_rate*self.dt
+
 
         # Make sure that the action (delta) is in interval [-pi/4, pi/4]:
         action = np.clip(action, -np.pi/4, np.pi/4)

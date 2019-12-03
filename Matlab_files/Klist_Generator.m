@@ -46,7 +46,7 @@ end
 % Test 1 
 %vtraj1 = linspace(0.5,10,100);
 %vtraj1 = 0.5:0.01:5;
-vtraj1 = [5*ones(1,100)];
+vtraj1 = 5*ones(1,100);
 X = SimulateTrajectory(10,vtraj1,B,K,vlist);
 X_no = SimulateTrajectory_noInterP(10,vtraj1,B,K,vlist);
 

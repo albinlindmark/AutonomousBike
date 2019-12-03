@@ -2,7 +2,7 @@ function X = SimulateTrajectory(phi0,vtraj,Blist,Klist,vlist)
 
 % Parameters for different scenarios
 dt = 0.04; % s
-top_rate = 160; % degrees/s
+top_rate = 200; % degrees/s
 deadzone_rate = 20; % degrees/s
 max_roll = 45; % degrees
 u = 0; % Set handle to zero degrees as initial
@@ -43,23 +43,21 @@ for i = 1:N
     u(i+1) = -K*x(:,i); 
     
     % Limit the rate to top_rate*dt
-    if i ~= 1
-        if u(i+1) - u(i) > top_rate*dt
-            u(i+1) = u(i) + top_rate*dt;
-        end
-        
-        if u(i+1) - u(i) < - top_rate*dt
-            u(i+1) = u(i) - top_rate*dt;
-        end
+    if u(i+1) - u(i) > top_rate*dt
+        u(i+1) = u(i) + top_rate*dt;
     end
+
+    if u(i+1) - u(i) < - top_rate*dt
+        u(i+1) = u(i) - top_rate*dt;
+    end
+
     
     
     % If the change between u(i+1)-u(i) less than zero
-    if i ~= 1
-        if abs(u(i+1) - u(i)) <= deadzone_rate*dt
-            u(i+1) = u(i); 
-        end
+    if abs(u(i+1) - u(i)) <= deadzone_rate*dt
+        u(i+1) = u(i); 
     end
+   
     
     % Clip the signal between -pi/2 -- pi/2
     u(i+1) = max(-max_roll,u(i+1));
@@ -80,7 +78,7 @@ X = x;
 figure()
 x_time = 0:0.04:length(vtraj)*0.04;
 plot(x_time(:),u(:))
-title('Controll signal')
+title('Control signal')
 
 figure()
 plot(x_time(2:end), diff(u(:)*1/0.04))
