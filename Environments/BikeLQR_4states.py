@@ -71,7 +71,7 @@ class BikeLQR_4statesEnv(gym.Env):
             action = old_action - self.top_rate*self.dt
 
         # Make sure that the action (delta) is in interval [-pi/4, pi/4]:
-        action = np.clip(action, -np.pi/4, np.pi/4)[0]
+        action = np.clip(action, -np.pi/4, np.pi/4)
         self.action = action.copy() # For the rendering    
 
         # Replace old_action to the new for the state
@@ -121,7 +121,7 @@ class BikeLQR_4statesEnv(gym.Env):
             #v_0 = np.random.choice([0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
             #v_0 = np.random.uniform(0.5, 10)
             v_0 = 5
-            self.state = np.array([phi_0, 0, v_0], dtype=np.float32)        
+            self.state = np.array([phi_0, 0, v_0, 0], dtype=np.float32)        
 
         self.changing_speed = changing_speed
         self.reward = 0
