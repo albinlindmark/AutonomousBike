@@ -39,8 +39,8 @@ class BikeLQREnv(gym.Env):
         #self.B = np.array([0.210654076615514, 1.042632885238932], dtype=np.float32)
 
         # B depends on the velocity, so it will vary for each step, so the ss equation becomes x_k+1 = A x_k + B_k delta, where B_k depends on the speed v.
-        # We have that B_k = B_k_wo_v * [v; v^2] (element-wise operation) where Bk_wo_v is the same as inv(Ac) (A - I) Bc(1) where Bc(1) is Bc for v=1.
-        self.B_k_wo_v = np.array([0.036491277663333, 0.047719661231268], dtype=np.float32)
+        self.B_c_wo_v = np.array([0.872633942893808, 1.000000000000000], dtype=np.float32)
+        self.inv_Ac = np.array([[0, 0.093092967291786], [0.568852500000000, 0]], dtype=np.float32)
    
         self.Q = np.array([[10, 0], [0, 0]])
         self.R = 1
@@ -60,7 +60,8 @@ class BikeLQREnv(gym.Env):
         log_cost = np.log(cost + np.finfo(np.float32).eps)
         self.reward = -log_cost
 
-        B_k = self.B_k_wo_v * np.array([v, v**2], dtype=np.float32)
+        B_c = self.B_c_wo_v * np.array([v, v**2], dtype=np.float32)
+        B_k = self.inv_Ac @ (self.A - np.eye(2)) @ B_c
         state_wo_v = self.A @ state_wo_v + B_k * action # action is scalar
         if self.changing_speed:
             v = v + self.v_delta
