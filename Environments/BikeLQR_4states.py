@@ -32,8 +32,9 @@ class BikeLQR_4statesEnv(gym.Env):
         self.dt = 0.04
 
         # Scenario parameters
-        self.top_rate = np.deg2rad(150)
+        self.top_rate = np.deg2rad(160)
         self.deadzone_rate = np.deg2rad(20)*0
+        
 
         high = np.array([np.pi/2, np.finfo(np.float32).max, 15, np.pi/2])
         self.observation_space = spaces.Box(low=-high, high=high, dtype=np.float32)
@@ -41,7 +42,6 @@ class BikeLQR_4statesEnv(gym.Env):
         
         # The state space matrices were created with Ts = 0.04 s
         self.A = np.array([[1.015144907891091, 0.070671622176451], [0.431844962338814, 1.015144907891091]], dtype=np.float32) # is independent of the speed
-        #self.B = np.array([0.210654076615514, 1.042632885238932], dtype=np.float32)
 
         # B depends on the velocity, so it will vary for each step, so the ss equation becomes x_k+1 = A x_k + B_k delta, where B_k depends on the speed v.
         self.B_c_wo_v = np.array([0.872633942893808, 1.000000000000000], dtype=np.float32)
@@ -62,13 +62,24 @@ class BikeLQR_4statesEnv(gym.Env):
 
         # Constraint the action for the deadzone
         if abs(action - old_action) <= self.deadzone_rate*self.dt:
-            action = old_action
+             action = old_action + np.sign(action - old_action)*self.deadzone_rate*self.dt
 
         # Constraint for action-rate
-        if action - old_action > self.top_rate*self.dt:
-            action = old_action + self.top_rate*self.dt
-        elif action - old_action < -self.top_rate*self.dt:
-            action = old_action - self.top_rate*self.dt
+        # if action - old_action > self.top_rate*self.dt:
+        #     action = old_action + self.top_rate*self.dt
+        # elif action - old_action < -self.top_rate*self.dt:
+        #     action = old_action - self.top_rate*self.dt
+
+        if not self.first_step:
+            if abs(action - old_action) > self.top_rate*self.dt:
+                action = old_action + np.sign(action - old_action)*self.top_rate*self.dt
+
+            # if action - old_action > self.top_rate*self.dt:
+            #     action = old_action + self.top_rate*self.dt
+            # elif action - old_action < -self.top_rate*self.dt:
+            #     action = old_action - self.top_rate*self.dt
+        self.first_step = False
+
 
         # Make sure that the action (delta) is in interval [-pi/4, pi/4]:
         action = np.clip(action, -np.pi/4, np.pi/4)
@@ -124,7 +135,8 @@ class BikeLQR_4statesEnv(gym.Env):
             #v_0 = np.random.uniform(0.5, 10)
             v_0 = 5
             self.state = np.array([phi_0, 0, v_0, 0], dtype=np.float32)        
-
+        
+        self.first_step = True
         self.changing_speed = changing_speed
         self.reward = 0
         self.done = False

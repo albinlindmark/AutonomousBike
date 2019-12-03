@@ -64,7 +64,7 @@ for i in range(nr_time_steps):
     print('phi:', state[0].item()*180/np.pi)
     #state, reward, done, _ = env.step(np.array([0], dtype=np.float32))
     phi_list.append(state[0].item()*180/np.pi)
-    delta_list.append(np.rad2deg(action))
+    delta_list.append(np.rad2deg(state[3]))
     
     #cumulative_reward += reward
     cumulative_reward += reward
@@ -77,10 +77,13 @@ for i in range(nr_time_steps):
 
 #t = np.linspace(0, len(phi_list)*Ts, len(phi_list))
 t = np.arange(0, len(phi_list)*Ts, Ts)
-fig, axes = plt.subplots(1,2, figsize=(14,8))
+fig, axes = plt.subplots(1,3, figsize=(14,8))
 axes[0].plot(t, phi_list)
 #axes.plot(t[1:], delta_list)
 axes[0].set_title('v = ' + str(v))
 axes[1].plot(t[1:], delta_list)
+axes[1].set_title('$\delta$')
+axes[2]. plot(t[3:], np.diff(delta_list[1:])/Ts)
+axes[2].set_title('$\dot{\delta}$')
 
 plt.show()
