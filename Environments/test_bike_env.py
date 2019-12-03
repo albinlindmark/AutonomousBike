@@ -32,15 +32,20 @@ def dlqr(A,B,Q,R):
 
 
 A = np.array([[1.015144907891091, 0.070671622176451], [0.431844962338814, 1.015144907891091]], dtype=np.float32)
-B_k_wo_v = np.array([0.036491277663333, 0.047719661231268], dtype=np.float32)
+B_c_wo_v = np.array([0.872633942893808, 1.000000000000000], dtype=np.float32)
+inv_Ac = np.array([[0, 0.093092967291786], [0.568852500000000, 0]], dtype=np.float32)
 
-env = gym.make("BikeLQR-v0")
+env = gym.make("BikeLQR_4states-v0")
 state = env.reset()
 init_state = state.copy()
 v = state[2]
 
-B_k = B_k_wo_v * np.array([v, v**2], dtype=np.float32)
+
+B_c = B_c_wo_v * np.array([v, v**2], dtype=np.float32)
+B_k = inv_Ac @ (A - np.eye(2)) @ B_c
+
 B_k = B_k.reshape((2,1))
+
 #K = np.array([2.153841222845478, 0.298295153292258], dtype=np.float32)
 Q = np.array([[10, 0], [0, 0]])
 R = 1
@@ -48,7 +53,7 @@ K, X, eigVals = dlqr(A,B_k,Q,R)
 K = np.squeeze(np.asarray(K))
 
 Ts = 0.04
-nr_time_steps = 30
+nr_time_steps = 100
 cumulative_reward = 0
 phi_list = [state[0]*180/np.pi]
 delta_list = []
@@ -72,9 +77,10 @@ for i in range(nr_time_steps):
 
 #t = np.linspace(0, len(phi_list)*Ts, len(phi_list))
 t = np.arange(0, len(phi_list)*Ts, Ts)
-fig, axes = plt.subplots(figsize=(14,8))
-axes.plot(t, phi_list)
+fig, axes = plt.subplots(1,2, figsize=(14,8))
+axes[0].plot(t, phi_list)
 #axes.plot(t[1:], delta_list)
-axes.set_title('v = ' + str(v))
+axes[0].set_title('v = ' + str(v))
+axes[1].plot(t[1:], delta_list)
 
 plt.show()
