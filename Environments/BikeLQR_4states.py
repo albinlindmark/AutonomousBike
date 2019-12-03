@@ -64,22 +64,10 @@ class BikeLQR_4statesEnv(gym.Env):
         if abs(action - old_action) <= self.deadzone_rate*self.dt:
              action = old_action + np.sign(action - old_action)*self.deadzone_rate*self.dt
 
-        # Constraint for action-rate
-        # if action - old_action > self.top_rate*self.dt:
-        #     action = old_action + self.top_rate*self.dt
-        # elif action - old_action < -self.top_rate*self.dt:
-        #     action = old_action - self.top_rate*self.dt
-
         if not self.first_step:
             if abs(action - old_action) > self.top_rate*self.dt:
                 action = old_action + np.sign(action - old_action)*self.top_rate*self.dt
-
-            # if action - old_action > self.top_rate*self.dt:
-            #     action = old_action + self.top_rate*self.dt
-            # elif action - old_action < -self.top_rate*self.dt:
-            #     action = old_action - self.top_rate*self.dt
         self.first_step = False
-
 
         # Make sure that the action (delta) is in interval [-pi/4, pi/4]:
         action = np.clip(action, -np.pi/4, np.pi/4)
