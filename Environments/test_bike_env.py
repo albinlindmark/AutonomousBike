@@ -55,20 +55,17 @@ K = np.squeeze(np.asarray(K))
 Ts = 0.04
 nr_time_steps = 100
 cumulative_reward = 0
-#phi_list = [state[0]*180/np.pi]
-phi_list = [state[0]]
+phi_list = [state[0]*180/np.pi]
 delta_list = []
 for i in range(nr_time_steps):
     action = -K@state[0:2]
     state, reward, done, _ = env.step([action])
     print('reward:', reward)
-    #print('phi:', state[0].item()*180/np.pi)
-    print('phi:', state[0].item())
+    print('phi:', state[0].item()*180/np.pi)
     #state, reward, done, _ = env.step(np.array([0], dtype=np.float32))
-    #phi_list.append(state[0].item()*180/np.pi)
-    phi_list.append(state[0].item())
-    #delta_list.append(np.rad2deg(action))
-    delta_list.append(action)
+    phi_list.append(state[0].item()*180/np.pi)
+    delta_list.append(np.rad2deg(state[3]))
+    
     #cumulative_reward += reward
     cumulative_reward += reward
     print('Cumulative reward', cumulative_reward)
@@ -80,10 +77,13 @@ for i in range(nr_time_steps):
 
 #t = np.linspace(0, len(phi_list)*Ts, len(phi_list))
 t = np.arange(0, len(phi_list)*Ts, Ts)
-fig, axes = plt.subplots(1,2, figsize=(14,8))
+fig, axes = plt.subplots(1,3, figsize=(14,8))
 axes[0].plot(t, phi_list)
 #axes.plot(t[1:], delta_list)
 axes[0].set_title('v = ' + str(v))
 axes[1].plot(t[1:], delta_list)
+axes[1].set_title('$\delta$')
+axes[2]. plot(t[3:], np.diff(delta_list[1:])/Ts)
+axes[2].set_title('$\dot{\delta}$')
 
 plt.show()
