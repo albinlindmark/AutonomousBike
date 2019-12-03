@@ -44,8 +44,12 @@ def get_optimal_sequence(init_state, env, changing_speed = False):
     B_k_wo_v = env.B_k_wo_v
     Q = env.Q
     R = env.R
+    B_c_wo_v = env.B_c_wo_v
+    inv_Ac = env.inv_Ac
 
-    B_k = B_k_wo_v * np.array([v, v**2], dtype=np.float32)
+    
+    B_c = B_c_wo_v * np.array([v, v**2], dtype=np.float32)
+    B_k = inv_Ac @ (A - np.eye(2)) @ B_c
     K, X, eigVals = dlqr(A, B_k.reshape((2,1)), Q, R)
     K = np.squeeze(np.asarray(K))
     
