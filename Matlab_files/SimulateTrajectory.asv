@@ -2,8 +2,8 @@ function X = SimulateTrajectory(phi0,vtraj,Blist,Klist,vlist)
 
 % Parameters for different scenarios
 dt = 0.04; % s
-top_rate = 160; % degrees/s
-deadzone_rate = 20; % degrees/s
+top_rate = 200; % degrees/s
+deadzone_rate = 0; % degrees/s
 max_roll = 45; % degrees
 u = 0; % Set handle to zero degrees as initial
 
@@ -78,12 +78,10 @@ end
 % Set the output as X
 X = x;
 figure()
-x_time = 0:0.04:length(vtraj)*0.04;
-plot(x_time(:),u(:))
+x_time = 0:0.4:length(vtraj1)*0.04;
+plot(x_time = 0:Ts:length(vtraj1)*Ts,u(:))
+hold on
+plot(x_time = 0:Ts:length(vtraj1)*Ts, diff(u(end-1)*1/0.04))
 title('Controll signal')
-
-figure()
-plot(x_time(2:end), diff(u(:)*1/0.04))
-title('Delta_u')
-
+legend('u','u_dot')
 end

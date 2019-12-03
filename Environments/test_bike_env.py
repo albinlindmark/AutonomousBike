@@ -55,17 +55,20 @@ K = np.squeeze(np.asarray(K))
 Ts = 0.04
 nr_time_steps = 100
 cumulative_reward = 0
-phi_list = [state[0]*180/np.pi]
+#phi_list = [state[0]*180/np.pi]
+phi_list = [state[0]]
 delta_list = []
 for i in range(nr_time_steps):
     action = -K@state[0:2]
     state, reward, done, _ = env.step([action])
     print('reward:', reward)
-    print('phi:', state[0].item()*180/np.pi)
+    #print('phi:', state[0].item()*180/np.pi)
+    print('phi:', state[0].item())
     #state, reward, done, _ = env.step(np.array([0], dtype=np.float32))
-    phi_list.append(state[0].item()*180/np.pi)
-    delta_list.append(np.rad2deg(action))
-    
+    #phi_list.append(state[0].item()*180/np.pi)
+    phi_list.append(state[0].item())
+    #delta_list.append(np.rad2deg(action))
+    delta_list.append(action)
     #cumulative_reward += reward
     cumulative_reward += reward
     print('Cumulative reward', cumulative_reward)

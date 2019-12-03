@@ -28,16 +28,20 @@ class BikeLQR_4statesEnv(gym.Env):
         self.viewer = None
         self.action = None
         self.length = 0.5
-        self.v_delta = 0.1
+        self.v_delta = 0
         self.dt = 0.04
 
         # Scenario parameters
-        self.top_rate = np.deg2rad(150)
-        self.deadzone_rate = np.deg2rad(20)*0
+        #self.top_rate = np.deg2rad(100)
+        #self.deadzone_rate = np.deg2rad(20)*0
+        self.top_rate = 160
+        self.deadzone_rate = 20 
 
-        high = np.array([np.pi/2, np.finfo(np.float32).max, 15, np.pi/2])
+        #high = np.array([np.pi/2, np.finfo(np.float32).max, 15, np.pi/2])
+        high = np.array([90, np.finfo(np.float32).max, 15, 90])
         self.observation_space = spaces.Box(low=-high, high=high, dtype=np.float32)
-        self.action_space = spaces.Box(-np.pi/2, np.pi/2, shape=(1,), dtype=np.float32)
+        #self.action_space = spaces.Box(-np.pi/2, np.pi/2, shape=(1,), dtype=np.float32)
+        self.action_space = spaces.Box(-90, 90, shape=(1,), dtype=np.float32)
         
         # The state space matrices were created with Ts = 0.04 s
         self.A = np.array([[1.015144907891091, 0.070671622176451], [0.431844962338814, 1.015144907891091]], dtype=np.float32) # is independent of the speed
@@ -59,19 +63,19 @@ class BikeLQR_4statesEnv(gym.Env):
 
         # Convert the action to a scalar
         action = action[0]
+        if not self.first_time:
+            # Constraint the action for the deadzone
+            if abs(action - old_action) <= self.deadzone_rate*self.dt:
+                action = old_action
 
-        # Constraint the action for the deadzone
-        if abs(action - old_action) <= self.deadzone_rate*self.dt:
-            action = old_action
-
-        # Constraint for action-rate
-        if action - old_action > self.top_rate*self.dt:
-            action = old_action + self.top_rate*self.dt
-        elif action - old_action < -self.top_rate*self.dt:
-            action = old_action - self.top_rate*self.dt
-
+            # Constraint for action-rate
+            if action - old_action > self.top_rate*self.dt:
+                action = old_action + self.top_rate*self.dt
+            elif action - old_action < -self.top_rate*self.dt:
+                action = old_action - self.top_rate*self.dt
+        self.first_time = False
         # Make sure that the action (delta) is in interval [-pi/4, pi/4]:
-        action = np.clip(action, -np.pi/4, np.pi/4)
+        action = np.clip(action, -45, 45)
         self.action = action.copy() # For the rendering    
 
         # Replace old_action to the new for the state
@@ -100,7 +104,16 @@ class BikeLQR_4statesEnv(gym.Env):
         self.state = np.array([state_wo_v[0], state_wo_v[1], v, old_action], dtype=np.float32)
 
         # If roll angle larger than 30 degrees, then terminate:
-        if abs(self.state[0]) > 30*np.pi/180:
+        #if abs(self.state[0]) > 30*np.pi/180:
+        #    self.done = True
+        #    worst_case_phi = np.pi/180*15
+        #    worst_case_state = np.array([worst_case_phi, 0], dtype=np.float32)
+        #    worst_case_action = np.pi/2
+        #    cost = self.cost_scale_factor * (worst_case_state.transpose() @ self.Q @ worst_case_state + worst_case_action**2*self.R)
+       #     self.reward = -100 * np.log(cost + np.finfo(np.float32).eps)
+            
+            
+        if abs(self.state[0]) > 30:
             self.done = True
             worst_case_phi = np.pi/180*15
             worst_case_state = np.array([worst_case_phi, 0], dtype=np.float32)
@@ -119,12 +132,14 @@ class BikeLQR_4statesEnv(gym.Env):
             self.state = init_state
         else:
             #phi_0 = np.pi/180*np.random.uniform(-5, 5)
-            phi_0 = np.deg2rad(10)
+            #phi_0 = np.deg2rad(10)
+            phi_0 = 10
             #v_0 = np.random.choice([0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
             #v_0 = np.random.uniform(0.5, 10)
             v_0 = 5
             self.state = np.array([phi_0, 0, v_0, 0], dtype=np.float32)        
-
+        
+        self.first_time = True
         self.changing_speed = changing_speed
         self.reward = 0
         self.done = False
