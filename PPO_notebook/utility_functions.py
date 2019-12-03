@@ -1,5 +1,7 @@
 import scipy.linalg
 import numpy as np
+import pandas as pd
+Gains = pd.read_excel('Klist_xls.xls', header=None).values
 
 def dlqr(A,B,Q,R):
     """Solve the discrete time lqr controller.
@@ -20,7 +22,22 @@ def dlqr(A,B,Q,R):
     
     return K, X, eigVals
 
-def get_optimal_sequence(init_state, env):
+def get_K(v):
+    #Get K-values for the given v using interpolation
+    v_table = Gains[:,0]
+    gains_col1 = Gains[:,1]
+    gains_col2 = Gains[:, 2]
+
+    K1 = np.interp(v, v_table, gains_col1)
+    K2 = np.interp(v, v_table, gains_col2)
+    K_interp = np.array([K1, K2], dtype=np.float32)
+
+    # index = np.argwhere(np.isclose(Gains[:,0], round(v, 1))).item()
+    # K = Gains[index,1:3]
+    
+    return K_interp
+
+def get_optimal_sequence(init_state, env, changing_speed = False):
     
     v = init_state[2]
     A = env.A
@@ -35,8 +52,13 @@ def get_optimal_sequence(init_state, env):
     phi_list = [init_state[0]]
     delta_list = []
     done = False
-    state = env.reset(init_state=init_state)
+    state = env.reset(init_state=init_state, changing_speed = changing_speed)
     while not done:
+        
+        if changing_speed:
+            v = state[2]
+            K = get_K(v)
+        
         action = -K@state[0:2]
         state, reward, done, _ = env.step([action])
         phi_list.append(state[0].item())

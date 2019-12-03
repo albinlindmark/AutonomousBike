@@ -34,9 +34,9 @@ Q = np.array([[10, 0], [0, 0]])
 R = 1
 
 Ts = 0.04
-nr_time_steps = 30
+nr_time_steps = 100
 
-cumulative_reward = np.zeros(64)
+cumulative_reward = np.zeros(200)
 for i in range(len(cumulative_reward)):
     state = env.reset()
     v = state[2]

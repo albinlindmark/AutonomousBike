@@ -28,6 +28,7 @@ class BikeLQREnv(gym.Env):
         self.viewer = None
         self.action = None
         self.length = 0.5
+        self.v_delta = 0
 
         high = np.array([np.pi/2, np.finfo(np.float32).max, 15])
         self.observation_space = spaces.Box(low=-high, high=high, dtype=np.float32)
@@ -61,7 +62,13 @@ class BikeLQREnv(gym.Env):
 
         B_k = self.B_k_wo_v * np.array([v, v**2], dtype=np.float32)
         state_wo_v = self.A @ state_wo_v + B_k * action # action is scalar
-        v = np.max([0.5, v])
+        if self.changing_speed:
+            v = v + self.v_delta
+            v = np.max([0.5, v])
+            v = np.min([10, va])
+        else:
+            v = np.max([0.5, v])
+            v = np.min([10, v])
         self.state = np.array([state_wo_v[0], state_wo_v[1], v], dtype=np.float32)
 
         # If roll angle larger than 30 degrees, then terminate:
@@ -76,25 +83,20 @@ class BikeLQREnv(gym.Env):
         return self.state, self.reward, self.done, {}
         
 
-    def reset(self, init_state=None):
+    def reset(self, init_state=None, changing_speed = False):
         # Start with random roll angle, zero roll angle rate and  zero steering angle.
         # I.e. phi(0) = uniform(min, max), dphi(0) = 0 and delta(0) = 0.
         # Note that x1 = phi and x2 =  b*h*dphi - a*v*delta.
         if type(init_state) == np.ndarray:
-        	self.state = init_state
+            self.state = init_state
         else:
-<<<<<<< HEAD
-            phi_0 = np.pi/180*(np.random.uniform(-0.5, 0.5))
-            self.v = np.random.uniform(5, 5)
-            
-        self.state = np.array([phi_0, 0, self.v], dtype=np.float32)
-=======
-            phi_0 = np.pi/180*np.random.uniform(-0.5, 0.5)
-            v_0 = np.random.choice([0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+            phi_0 = np.pi/180*np.random.uniform(-5, 5)
+            #v_0 = np.random.choice([0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
             #v_0 = np.random.uniform(0.5, 10)
-            self.state = np.array([phi_0, 0, v_0], dtype=np.float32)        	
+            v_0 = 5
+            self.state = np.array([phi_0, 0, v_0], dtype=np.float32)        
         
->>>>>>> 01ce530bbc38ca793738e3ae0a461bfc5f914122
+        self.changing_speed = changing_speed
         self.reward = 0
         self.done = False
         return self.state
