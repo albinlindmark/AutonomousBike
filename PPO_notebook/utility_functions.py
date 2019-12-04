@@ -41,7 +41,6 @@ def get_optimal_sequence(init_state, env, changing_speed = False):
     
     v = init_state[2]
     A = env.A
-    B_k_wo_v = env.B_k_wo_v
     Q = env.Q
     R = env.R
     B_c_wo_v = env.B_c_wo_v

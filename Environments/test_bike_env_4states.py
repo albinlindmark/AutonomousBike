@@ -35,7 +35,7 @@ A = np.array([[1.015144907891091, 0.070671622176451], [0.431844962338814, 1.0151
 B_c_wo_v = np.array([0.872633942893808, 1.000000000000000], dtype=np.float32)
 inv_Ac = np.array([[0, 0.093092967291786], [0.568852500000000, 0]], dtype=np.float32)
 
-env = gym.make("BikeLQR-v0")
+env = gym.make("BikeLQR_4states-v0")
 state = env.reset()
 init_state = state.copy()
 v = state[2]
@@ -55,15 +55,14 @@ Ts = 0.04
 nr_time_steps = 100
 cumulative_reward = 0
 phi_list = [state[0]*180/np.pi]
-delta_list = []
+delta_list = [np.rad2deg(state[3])]
 for i in range(nr_time_steps):
     action = -K@state[0:2]
     state, reward, done, _ = env.step([action])
     print('reward:', reward)
     print('phi:', state[0].item()*180/np.pi)
-    #state, reward, done, _ = env.step(np.array([0], dtype=np.float32))
     phi_list.append(state[0].item()*180/np.pi)
-    delta_list.append(np.rad2deg(action))
+    delta_list.append(np.rad2deg(state[3]))
     
     #cumulative_reward += reward
     cumulative_reward += reward
@@ -74,14 +73,16 @@ for i in range(nr_time_steps):
         break
 
 
+#t = np.linspace(0, len(phi_list)*Ts, len(phi_list))
 t = np.arange(0, len(phi_list)*Ts, Ts)
 fig, axes = plt.subplots(1,3, figsize=(14,8))
 fig.suptitle('v = ' + str(v), fontsize=16)
 axes[0].plot(t, phi_list)
+#axes.plot(t[1:], delta_list)
 axes[0].set_title(r'$\varphi$', fontsize=14)
-axes[1].plot(t[1:], delta_list)
+axes[1].plot(t, delta_list)
 axes[1].set_title('$\delta$', fontsize=14)
-axes[2]. plot(t[2:], np.diff(delta_list)/Ts)
+axes[2]. plot(t[1:], np.diff(delta_list)/Ts)
 axes[2].set_title('$\dot{\delta}$', fontsize=14)
 
 plt.show()

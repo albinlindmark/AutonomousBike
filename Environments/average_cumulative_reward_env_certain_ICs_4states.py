@@ -28,7 +28,7 @@ A = np.array([[1.015144907891091, 0.070671622176451], [0.431844962338814, 1.0151
 B_c_wo_v = np.array([0.872633942893808, 1.000000000000000], dtype=np.float32)
 inv_Ac = np.array([[0, 0.093092967291786], [0.568852500000000, 0]], dtype=np.float32)
 
-env = gym.make("BikeLQR-v0")
+env = gym.make("BikeLQR_4states-v0")
 
 #K = np.array([2.153841222845478, 0.298295153292258], dtype=np.float32)
 Q = np.array([[10, 0], [0, 0]])
@@ -44,7 +44,7 @@ idx = 0
 cumulative_rewards = np.zeros(nr_of_sequences)
 for v_0 in initial_v_to_test:
     for phi_0 in initial_roll_angles_to_test:
-        init_state = np.array([phi_0, 0, v_0], dtype=np.float32)
+        init_state = np.array([phi_0, 0, v_0, 0], dtype=np.float32)
         state = env.reset(init_state=init_state)
         B_c = B_c_wo_v * np.array([v_0, v_0**2], dtype=np.float32)
         B_k = inv_Ac @ (A - np.eye(2)) @ B_c
