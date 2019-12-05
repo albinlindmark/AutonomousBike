@@ -32,8 +32,8 @@ class BikeLQR_4statesEnv(gym.Env):
         self.dt = 0.04
 
         # Scenario parameters
-        self.top_rate = np.deg2rad(200)
-        self.deadzone_rate = np.deg2rad(20)
+        self.top_rate = np.deg2rad(100)
+        self.deadzone_rate = np.deg2rad(0)
         
 
         high = np.array([np.pi/2, np.finfo(np.float32).max, 15, np.pi/2])
@@ -49,7 +49,7 @@ class BikeLQR_4statesEnv(gym.Env):
    
         self.Q = np.array([[10, 0], [0, 0]])
         self.R = 1
-        self.cost_scale_factor = 1e5
+        self.cost_scale_factor = 1e2
 
 
     def step(self, action):
@@ -62,9 +62,8 @@ class BikeLQR_4statesEnv(gym.Env):
 
         # Constraint the action for the deadzone
         if abs(action - old_action) <= self.deadzone_rate*self.dt:
-             action = old_action + np.sign(action - old_action)*self.deadzone_rate*self.dt
+             action = old_action
 
-        
         if abs(action - old_action) > self.top_rate*self.dt:
             action = old_action + np.sign(action - old_action)*self.top_rate*self.dt
 
@@ -83,7 +82,7 @@ class BikeLQR_4statesEnv(gym.Env):
         # Calculate the cost and reward 
         cost = self.cost_scale_factor * (state_wo_v.transpose() @ self.Q @ state_wo_v + action**2*self.R)
         log_cost = np.log(cost + np.finfo(np.float32).eps)
-        self.reward = -log_cost
+        self.reward = -cost
 
         # Calculate the new state
         B_c = self.B_c_wo_v * np.array([v, v**2], dtype=np.float32)
@@ -105,7 +104,9 @@ class BikeLQR_4statesEnv(gym.Env):
             worst_case_state = np.array([worst_case_phi, 0], dtype=np.float32)
             worst_case_action = np.pi/2
             cost = self.cost_scale_factor * (worst_case_state.transpose() @ self.Q @ worst_case_state + worst_case_action**2*self.R)
-            self.reward = -100 * np.log(cost + np.finfo(np.float32).eps)
+            log_cost = np.log(cost + np.finfo(np.float32).eps)
+            #self.reward = -100 * log_cost
+            self.reward = -100 * cost
         
         return self.state, self.reward, self.done, {}
         
@@ -117,14 +118,13 @@ class BikeLQR_4statesEnv(gym.Env):
         if type(init_state) == np.ndarray:
             self.state = init_state
         else:
-            #phi_0 = np.pi/180*np.random.uniform(-5, 5)
-            phi_0 = np.deg2rad(5)
+            phi_0 = np.pi/180*np.random.uniform(-10, 10)
+            #phi_0 = np.deg2rad(10)
             #v_0 = np.random.choice([0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
             #v_0 = np.random.uniform(0.5, 10)
-            v_0 = 5
+            v_0 = 1
             self.state = np.array([phi_0, 0, v_0, 0], dtype=np.float32)        
         
-        self.first_step = True
         self.changing_speed = changing_speed
         self.reward = 0
         self.done = False
